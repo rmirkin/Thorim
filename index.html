@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>סטטוס טחורים של רחל</title>
+  <meta name="description" content="דף סטטוס פשוט + RSS מתוך קובץ יחיד" />
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="./index.html?feed=1" />
+  <style>
+    body { font-family: system-ui, Arial, sans-serif; margin: 24px; line-height: 1.5; }
+    .card { max-width: 720px; border: 1px solid #ddd; border-radius: 12px; padding: 18px; }
+    .status { font-size: 22px; font-weight: 700; margin: 12px 0; }
+    .meta { color: #555; font-size: 14px; }
+    .links a { margin-left: 12px; }
+    .hint { background: #f6f6f6; padding: 12px; border-radius: 10px; margin-top: 14px; }
+    code { background: #f0f0f0; padding: 2px 6px; border-radius: 6px; }
+  </style>
+
+  <script type="application/json" id="status-data">
+  {
+    "name": "רחל",
+    "has_hemorrhoids": false,
+    "updated_at_iso": "2025-12-14T00:00:00+01:00",
+    "updated_at_rss": "Sun, 14 Dec 2025 00:00:00 +0100"
+  }
+  </script>
+</head>
+<body>
+  <div class="card" id="page">
+    <h1>סטטוס טחורים של רחל</h1>
+    <div id="status" class="status"></div>
+    <div id="updated" class="meta"></div>
+
+    <div class="links">
+      <a href="./index.html?feed=1">RSS</a>
+    </div>
+
+    <div class="hint">
+      כדי לעדכן, ערוך רק את ה JSON למעלה: <code>has_hemorrhoids</code> ו <code>updated_at_iso</code> וגם <code>updated_at_rss</code>, ואז Commit.
+    </div>
+  </div>
+
+  <script>
+    function readStatusData() {
+      const el = document.getElementById('status-data');
+      return JSON.parse(el.textContent);
+    }
+
+    function escapeXml(s) {
+      return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&apos;');
+    }
+
+    function makeRssXml(data, baseUrl) {
+      const name = typeof data.name === 'string' ? data.name : 'רחל';
+      const has = Boolean(data.has_hemorrhoids);
+      const title = has ? (name + ': כרגע יש טחורים') : (name + ': כרגע אין טחורים');
+      const desc = has ? 'סטטוס נוכחי: כרגע יש טחורים' : 'סטטוס נוכחי: כרגע אין טחורים';
+      const pubDate = data.updated_at_rss || 'Sun, 14 Dec 2025 00:00:00 +0100';
+      const guid = 'status-' + (data.updated_at_iso || String(Date.now()));
+
+      const channelTitle = 'סטטוס טחורים של ' + name;
+      const channelLink = baseUrl;
+      const channelDesc = 'עדכונים אוטומטיים על שינוי הסטטוס';
+
+      return [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<rss version="2.0">',
+        '  <channel>',
+        '    <title>' + escapeXml(channelTitle) + '</title>',
+        '    <link>' + escapeXml(channelLink) + '</link>',
+        '    <description>' + escapeXml(channelDesc) + '</description>',
+        '    <language>he</language>',
+        '    <lastBuildDate>' + escapeXml(pubDate) + '</lastBuildDate>',
+        '    <item>',
+        '      <title>' + escapeXml(title) + '</title>',
+        '      <link>' + escapeXml(channelLink) + '</link>',
+        '      <guid isPermaLink="false">' + escapeXml(guid) + '</guid>',
+        '      <pubDate>' + escapeXml(pubDate) + '</pubDate>',
+        '      <description>' + escapeXml(desc) + '</description>',
+        '    </item>',
+        '  </channel>',
+        '</rss>'
+      ].join('\n');
+    }
+
+    function renderHtml(data) {
+      const name = typeof data.name === 'string' ? data.name : 'רחל';
+      const has = Boolean(data.has_hemorrhoids);
+
+      document.getElementById('status').textContent = has
+        ? (name + ' כרגע יש טחורים')
+        : (name + ' כרגע אין טחורים');
+
+      document.getElementById('updated').textContent = data.updated_at_iso
+        ? ('עודכן לאחרונה: ' + data.updated_at_iso)
+        : '';
+    }
+
+    function isFeedRequest() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('feed') === '1';
+    }
+
+    (function main() {
+      const data = readStatusData();
+
+      if (isFeedRequest()) {
+        const baseUrl = window.location.origin + window.location.pathname;
+        const xml = makeRssXml(data, baseUrl);
+
+        document.open();
+        document.write(xml);
+        document.close();
+
+        document.contentType = 'application/rss+xml';
+        return;
+      }
+
+      renderHtml(data);
+    })();
+  </script>
+</body>
+</html>
