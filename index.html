@@ -12,8 +12,6 @@
     .status { font-size: 22px; font-weight: 700; margin: 12px 0; }
     .meta { color: #555; font-size: 14px; }
     .links a { margin-left: 12px; }
-    .hint { background: #f6f6f6; padding: 12px; border-radius: 10px; margin-top: 14px; }
-    code { background: #f0f0f0; padding: 2px 6px; border-radius: 6px; }
   </style>
 
   <script type="application/json" id="status-data">
@@ -33,10 +31,6 @@
 
     <div class="links">
       <a href="./index.html?feed=1">RSS</a>
-    </div>
-
-    <div class="hint">
-      כדי לעדכן, ערוך רק את ה JSON למעלה: <code>has_hemorrhoids</code> ו <code>updated_at_iso</code> וגם <code>updated_at_rss</code>, ואז Commit.
     </div>
   </div>
 
@@ -58,8 +52,10 @@
     function makeRssXml(data, baseUrl) {
       const name = typeof data.name === 'string' ? data.name : 'רחל';
       const has = Boolean(data.has_hemorrhoids);
-      const title = has ? (name + ': כרגע יש טחורים') : (name + ': כרגע אין טחורים');
+
+      const title = has ? ('ל' + name + ' כרגע יש טחורים') : ('ל' + name + ' כרגע אין טחורים');
       const desc = has ? 'סטטוס נוכחי: כרגע יש טחורים' : 'סטטוס נוכחי: כרגע אין טחורים';
+
       const pubDate = data.updated_at_rss || 'Sun, 14 Dec 2025 00:00:00 +0100';
       const guid = 'status-' + (data.updated_at_iso || String(Date.now()));
 
@@ -93,8 +89,8 @@
       const has = Boolean(data.has_hemorrhoids);
 
       document.getElementById('status').textContent = has
-        ? (name + ' כרגע יש טחורים')
-        : (name + ' כרגע אין טחורים');
+        ? ('ל' + name + ' כרגע יש טחורים')
+        : ('ל' + name + ' כרגע אין טחורים');
 
       document.getElementById('updated').textContent = data.updated_at_iso
         ? ('עודכן לאחרונה: ' + data.updated_at_iso)
@@ -116,8 +112,6 @@
         document.open();
         document.write(xml);
         document.close();
-
-        document.contentType = 'application/rss+xml';
         return;
       }
 
